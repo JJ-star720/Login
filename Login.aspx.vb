@@ -1,4 +1,6 @@
-﻿Public Class Login
+﻿Imports System.Data.SqlClient
+
+Public Class Login
     Inherits System.Web.UI.Page
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
@@ -15,6 +17,10 @@
         }
         Dim dbHelper As New DatabaseHelper()
         'Validar el usuario 
+        Dim parametros As New List(Of SqlParameter) From {
+            New SqlParameter("@Email", email),
+            New SqlParameter("@Password", password)
+        }
 
         If Not usuario.Validar() Then
             If email = "test@example.com" And password = "password" Then
