@@ -7,6 +7,33 @@ Public Class Login
 
     End Sub
 
+    Protected Function VerificarUsuario(email As String, password As String) As Boolean
+        Try
+            Dim dbHelper As New DatabaseHelper()
+            Dim parametros As New List(Of SqlParameter) From {
+                New SqlParameter("@Email", email),
+                New SqlParameter("@Password", password)
+            }
+            ' Ejecutar la consulta para verificar el usuario
+            Dim dataTable As DataTable = dbHelper.ExecuteQuery("SELECT * FROM USUARIOS WHERE EMAIL = @Email AND CONTRASEÑA = @Password", parametros)
+            If dataTable.Rows.Count > 0 Then
+                ' Usuario encontrado, puedes redirigir o realizar otra acción
+                Session.Add("UsuarioId", dataTable.Rows(0)("Id").ToString())
+                Session.Add("UsuarioNombre", dataTable.Rows(0)("Nombre").ToString())
+                Session.Add("UsuarioApellido", dataTable.Rows(0)("Apellido").ToString())
+                Session.Add("UsuarioEmail", dataTable.Rows(0)("Email").ToString())
+                Return True
+            Else
+                ' Usuario no encontrado, manejar el error
+                Return False
+            End If
+        Catch ex As Exception
+
+            Return False
+
+        End Try
+
+    End Function
     Protected Sub btnLogin_Click(sender As Object, e As EventArgs)
 
         Dim email As String = txtEmail.Text
@@ -21,6 +48,9 @@ Public Class Login
             New SqlParameter("@Email", email),
             New SqlParameter("@Password", password)
         }
+
+        ' Ejecutar la consulta para verificar el usuario
+        Dim dataTable As DataTable = dbHelper.ExecuteQuery("SELECT * FROM USUARIOS WHERE EMAIL = @Email AND CONTRASEÑA = @Password", parametros)
 
         If Not usuario.Validar() Then
             If email = "test@example.com" And password = "password" Then
