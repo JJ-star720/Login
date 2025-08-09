@@ -7,62 +7,52 @@ Public Class Login
 
     End Sub
 
-    Protected Function VerificarUsuario(email As String, password As String) As Boolean
+    Protected Function VerificarUsuario(usuario As Usuario) As Boolean
         Try
-            Dim dbHelper As New DatabaseHelper()
+            Dim helper As New DatabaseHelper()
             Dim parametros As New List(Of SqlParameter) From {
-                New SqlParameter("@Email", email),
-                New SqlParameter("@Password", password)
-            }
+            New SqlParameter("@Email", usuario.Email),
+            New SqlParameter("@Password", usuario.Password)
+        }
             ' Ejecutar la consulta para verificar el usuario
-            Dim dataTable As DataTable = dbHelper.ExecuteQuery("SELECT * FROM USUARIOS WHERE EMAIL = @Email AND CONTRASEÑA = @Password", parametros)
+            Dim query As String = "SELECT * FROM USUARIOS WHERE EMAIL = @Email AND CONTRASEÑA = @Password"
+            Dim dataTable As DataTable = helper.ExecuteQuery(query, parametros)
+
+
+            ' Verificar si se encontró el usuario
             If dataTable.Rows.Count > 0 Then
                 ' Usuario encontrado, puedes redirigir o realizar otra acción
-                Session.Add("UsuarioId", dataTable.Rows(0)("Id").ToString())
-                Session.Add("UsuarioNombre", dataTable.Rows(0)("Nombre").ToString())
-                Session.Add("UsuarioApellido", dataTable.Rows(0)("Apellido").ToString())
-                Session.Add("UsuarioEmail", dataTable.Rows(0)("Email").ToString())
+                usuario = usuario.dtToUsuario(dataTable)
+                Session.Add("UsuarioId", usuario.Id.ToString())
+                Session.Add("UsuarioNombre", usuario.Nombre.ToString())
+                Session.Add("UsuarioApellido", usuario.Apellido.ToString())
+                Session.Add("UsuarioEmail", usuario.Email.ToString())
                 Return True
             Else
                 ' Usuario no encontrado, manejar el error
                 Return False
+
             End If
+
         Catch ex As Exception
-
             Return False
-
         End Try
 
     End Function
     Protected Sub btnLogin_Click(sender As Object, e As EventArgs)
 
-        Dim email As String = txtEmail.Text
-        Dim password As String = txtPass.Text
+
         Dim usuario As New Usuario() With {
-            .Email = email,
-            .Password = password
-        }
-        Dim dbHelper As New DatabaseHelper()
-        'Validar el usuario 
-        Dim parametros As New List(Of SqlParameter) From {
-            New SqlParameter("@Email", email),
-            New SqlParameter("@Password", password)
+            .Email = txtEmail.Text,
+            .Password = txtPass.Text
         }
 
-        ' Ejecutar la consulta para verificar el usuario
-        Dim dataTable As DataTable = dbHelper.ExecuteQuery("SELECT * FROM USUARIOS WHERE EMAIL = @Email AND CONTRASEÑA = @Password", parametros)
-
-        If Not usuario.Validar() Then
-            If email = "test@example.com" And password = "password" Then
-
-                Response.Redirect("Welcome.aspx")
-            Else
-
-                lblError.Text = "Correo electrónico o contraseña inválidos."
-                lblError.Visible = True
-            End If
+        ' Validar el usuario
+        If usuario.Validar And VerificarUsuario(usuario) Then
+            Response.Redirect("Home.aspx")
         Else
-            lblError.Text = "Por favor, ingrese un correo electrónico y una contraseña válidos."
+
+            lblError.Text = "Correo electrónico o contraseña inválidos."
             lblError.Visible = True
         End If
 
